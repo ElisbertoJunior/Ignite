@@ -1,43 +1,98 @@
+import { format, formatDistanceToNow } from "date-fns";
+import ptBR from "date-fns/locale/pt-BR";
 import Avatar from "../Avatar";
 import Comment from "../Comment";
 import styles from "./Post.module.css";
+import { FormEvent, SetStateAction, useState } from "react";
 
-const Post = () => {
+type Props = {
+  author: {
+    avatarUrl: string;
+    name: string;
+    role: string;
+  };
+  publishedAt: Date;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any[];
+};
+
+const Post = ({ author, publishedAt, content }: Props) => {
+  const [comments, setComments] = useState<string[]>([
+    "Post muito bacana hein?!",
+  ]);
+
+  const [newCommentText, setNewCommentText] = useState<string>("");
+
+  const publishedDateFormatted = format(
+    publishedAt,
+    "d 'de' LLLL 'ás' HH:mm'h'",
+    {
+      locale: ptBR,
+    }
+  );
+
+  const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, {
+    locale: ptBR,
+    addSuffix: true,
+  });
+
+  const handleNewCommentChange = (event: { target: { value: SetStateAction<string>; }; }) =>
+    setNewCommentText(event.target.value);
+
+  const handleCreateNewComment = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setComments([...comments, newCommentText]);
+    setNewCommentText("");
+  };
+
+  //Exemplo usando o Intl
+  // new Intl.DateTimeFormat("pt-BR", {
+  //   day: "2-digit",
+  //   month: "long",
+  //   hour: "2-digit",
+  //   minute: "2-digit",
+  // }).format(publishedAt);
+
   return (
     <article className={styles.post}>
       <header>
         <div className={styles.author}>
-          <Avatar hasBorder={true}
-            srcImage="https://avatars.githubusercontent.com/u/94086819?v=4"
-          />
+          <Avatar hasBorder={true} srcImage={author.avatarUrl} />
           <div className={styles.authorInfo}>
-            <strong>Elisberto Junior</strong>
-            <span>Java Developer</span>
+            <strong>{author.name}</strong>
+            <span>{author.role}</span>
           </div>
         </div>
 
-        <time title="31 de Julho as 20:34" dateTime="2023-07-31 20:32:00">
-          Publicado ha 1h
+        <time
+          title={publishedDateFormatted}
+          dateTime={publishedAt.toISOString()}
+        >
+          {publishedDateRelativeToNow}
         </time>
       </header>
       <div className={styles.content}>
-        <p>Fala galeraa 👋</p>
-        <p>
-          Acabei de subir mais um projeto no meu portifa. É um projeto que fiz
-          no NLW Return, evento da Rocketseat. O nome do projeto é DoctorCare 🚀
-        </p>
-        <p>👉 <a href="">jane.design/doctorcare</a> </p>
-        <p>
-          <a href="#">#novoprojeto</a>{'  '}
-          <a href="#">#nlw</a>{'  '}
-          <a href="#">#rocketseat</a>
-        </p>
+        {content.map((line) => {
+          if (line.type === "paragraph") {
+            return <p key={line.content}>{line.content}</p>;
+          } else if (line.type === "link") {
+            return (
+              <p key={line.content}>
+                <a href={line.content}>{line.content}</a>
+              </p>
+            );
+          }
+        })}
       </div>
 
-      <form className={styles.commentForm}>
+      <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
         <strong>Deixe seu feedback</strong>
-        <textarea 
+        <textarea
+          name="comment"
+          value={newCommentText}
           placeholder="Deixe um comentario"
+          onChange={handleNewCommentChange}
         />
         <footer>
           <button type="submit">Publicar</button>
@@ -45,9 +100,9 @@ const Post = () => {
       </form>
 
       <div className={styles.commentList}>
-        <Comment />
-        <Comment />
-        <Comment />
+        {comments.map((comment) => {
+          return <Comment key={comment.length} content={comment} />;
+        })}
       </div>
     </article>
   );
