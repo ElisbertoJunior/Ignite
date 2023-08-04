@@ -101,7 +101,7 @@ const Post = ({ author, publishedAt, content }: Props) => {
 
       <div className={styles.commentList}>
         {comments.map((comment) => {
-          return <Comment key={comment.length} content={comment} />;
+          return <Comment key={comment} content={comment} />;
         })}
       </div>
     </article>
