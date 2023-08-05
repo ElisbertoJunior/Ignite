@@ -36,8 +36,15 @@ const Post = ({ author, publishedAt, content }: Props) => {
     addSuffix: true,
   });
 
-  const handleNewCommentChange = (event: { target: { value: SetStateAction<string>; }; }) =>
+  const handleNewCommentChange = (event: {
+    target: {
+      setCustomValidity(arg0: string): unknown;
+      value: SetStateAction<string>;
+    };
+  }) => {
+    event.target.setCustomValidity("");
     setNewCommentText(event.target.value);
+  };
 
   const handleCreateNewComment = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,13 +53,15 @@ const Post = ({ author, publishedAt, content }: Props) => {
     setNewCommentText("");
   };
 
-  //Exemplo usando o Intl
-  // new Intl.DateTimeFormat("pt-BR", {
-  //   day: "2-digit",
-  //   month: "long",
-  //   hour: "2-digit",
-  //   minute: "2-digit",
-  // }).format(publishedAt);
+  const deleteComment = (comment: string) => {
+    setComments(comments.filter((item) => item !== comment));
+  };
+
+  const handleNewCommentInvalid = (event: {
+    target: { setCustomValidity: (arg0: string) => void };
+  }) => {
+    event.target.setCustomValidity("Esse campo e obrigatorio!");
+  };
 
   return (
     <article className={styles.post}>
@@ -88,12 +97,16 @@ const Post = ({ author, publishedAt, content }: Props) => {
 
       <form onSubmit={handleCreateNewComment} className={styles.commentForm}>
         <strong>Deixe seu feedback</strong>
+
         <textarea
+          required
+          onInvalid={handleNewCommentInvalid}
           name="comment"
           value={newCommentText}
           placeholder="Deixe um comentario"
           onChange={handleNewCommentChange}
         />
+
         <footer>
           <button type="submit">Publicar</button>
         </footer>
@@ -101,7 +114,13 @@ const Post = ({ author, publishedAt, content }: Props) => {
 
       <div className={styles.commentList}>
         {comments.map((comment) => {
-          return <Comment key={comment} content={comment} />;
+          return (
+            <Comment
+              key={comment}
+              content={comment}
+              onDeleteComment={deleteComment}
+            />
+          );
         })}
       </div>
     </article>
